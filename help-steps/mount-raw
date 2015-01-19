@@ -5,6 +5,7 @@
 ## See the file COPYING for copying conditions.
 
 set -x
+set -e
 
 error_handler_mount-raw() {
    : echo "
@@ -16,8 +17,11 @@ ${red}${bold}ERROR $BASH_SOURCE: | caller: $(caller)${reset}
 
 MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-source "$MYDIR"/pre
-source "$MYDIR"/variables
+source "$MYDIR/pre"
+source "$MYDIR/colors"
+source "$MYDIR/variables"
+
+root_check
 
 mount_raw() {
    trap "error_handler_mount-raw" ERR INT TERM

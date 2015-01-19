@@ -182,6 +182,10 @@
         path = packages/damngpl
         url = https://github.com/Whonix/damngpl.git
 
+[submodule "packages/gpg-bash-lib"]
+        path = packages/gpg-bash-lib
+        url = https://github.com/Whonix/gpg-bash-lib.git
+
 [submodule "packages/gpl-sources-download"]
         path = packages/gpl-sources-download
         url = https://github.com/Whonix/gpl-sources-download.git
@@ -189,6 +193,14 @@
 [submodule "packages/grub-enable-apparmor"]
         path = packages/grub-enable-apparmor
         url = https://github.com/Whonix/grub-enable-apparmor.git
+
+[submodule "packages/grub-output-verbose"]
+        path = packages/grub-output-verbose
+        url = https://github.com/Whonix/grub-output-verbose.git
+
+[submodule "packages/grub-screen-resolution"]
+        path = packages/grub-screen-resolution
+        url = https://github.com/Whonix/grub-screen-resolution.git
 
 [submodule "packages/ipv4-forward-disable"]
         path = packages/ipv4-forward-disable
@@ -250,6 +262,10 @@
         path = packages/knetattach-hide
         url = https://github.com/Whonix/knetattach-hide.git
 
+[submodule "packages/ksm"]
+        path = packages/ksm
+        url = https://github.com/Whonix/ksm.git
+
 [submodule "packages/msgcollector"]
         path = packages/msgcollector
         url = https://github.com/Whonix/msgcollector.git
@@ -277,6 +293,10 @@
 [submodule "packages/power-savings-disable-in-vms"]
         path = packages/power-savings-disable-in-vms
         url = https://github.com/Whonix/power-savings-disable-in-vms.git
+
+[submodule "packages/python-guimessages"]
+        path = packages/python-guimessages
+        url = https://github.com/Whonix/python-guimessages.git
 
 [submodule "packages/rads"]
         path = packages/rads
@@ -382,6 +402,10 @@
         path = packages/whonix-gw-network-conf
         url = https://github.com/Whonix/whonix-gw-network-conf.git
 
+[submodule "packages/whonix-host-firewall"]
+        path = packages/whonix-host-firewall
+        url = https://github.com/Whonix/whonix-host-firewall.git
+
 [submodule "packages/whonix-initializer"]
         path = packages/whonix-initializer
         url = https://github.com/Whonix/whonix-initializer.git
@@ -389,6 +413,10 @@
 [submodule "packages/whonix-legacy"]
         path = packages/whonix-legacy
         url = https://github.com/Whonix/whonix-legacy.git
+
+[submodule "packages/whonix-libvirt"]
+        path = packages/whonix-libvirt
+        url = https://github.com/Whonix/whonix-libvirt.git
 
 [submodule "packages/whonix-repository"]
         path = packages/whonix-repository
@@ -401,6 +429,14 @@
 [submodule "packages/whonixsetup"]
         path = packages/whonixsetup
         url = https://github.com/Whonix/whonixsetup.git
+
+[submodule "packages/whonix-setup-wizard"]
+        path = packages/whonix-setup-wizard
+        url = https://github.com/Whonix/whonix-setup-wizard.git
+
+[submodule "packages/whonix-welcome-page"]
+        path = packages/whonix-welcome-page
+        url = https://github.com/Whonix/whonix-welcome-page.git
 
 [submodule "packages/whonix-ws-desktop-shortcuts"]
         path = packages/whonix-ws-desktop-shortcuts

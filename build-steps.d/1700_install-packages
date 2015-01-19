@@ -5,6 +5,7 @@
 ## See the file COPYING for copying conditions.
 
 set -x
+set -e
 
 true "INFO: Currently running script: $BASH_SOURCE${1+"$@"}"
 
@@ -15,7 +16,10 @@ cd ..
 cd help-steps
 
 source pre
+source colors
 source variables
+
+root_check
 
 ## Debugging function.
 apt_get_parse_unmet_dependency() {
@@ -57,6 +61,7 @@ apt_get_parse_unmet_dependency() {
 Will try to manually install it for debugging...${reset}"
          remember_pkg[$unmet_dependency]="true"
          set -x
+set -e
          true "INFO: Running \"dpkg -l | grep $unmet_dependency\"..."
          dpkg -l | grep "$unmet_dependency"
          apt-cache policy "$unmet_dependency"
@@ -69,6 +74,7 @@ Will try to manually install it for debugging...${reset}"
    done
 
    set -x
+set -e
 
    IFS="${OIFS}"
 }
@@ -381,6 +387,23 @@ $whonix_build_script_whonix_package${reset}"
       true "${cyan}INFO: ANON_BUILD_INSTALL_TO_ROOT is set to 1, skipping installation of anon-shared-build-fix-grub, ok.${reset}"
    else
       pkg-install-maybe anon-shared-build-fix-grub
+   fi
+
+   if [ "$ANON_BUILD_INSTALL_TO_ROOT" = "1" ]; then
+      true "${cyan}INFO: ANON_BUILD_INSTALL_TO_ROOT is set to 1, skipping installation of weak recommended guest additions packages, ok.${reset}"
+   else
+      ## Weak recommended packages. No other package depends on it. Can be
+      ## easily uninstalled. For better usability.
+      if [ "$WHONIX_BUILD_VIRTUALBOX" = "true" ]; then
+         pkg-install-maybe virtualbox-guest-x11
+      else
+         true "${cyan}INFO: skipping installation of weak recommended guest additions package virtualbox-guest-x11, because not using --target virtualbox, ok.${reset}"
+      fi
+      if [ "$WHONIX_BUILD_QCOW2" = "true" ]; then
+         pkg-install-maybe spice-vdagent
+      else
+         true "${cyan}INFO: skipping installation of weak recommended guest additions package spice-vdagent, because not using --target qcow2, ok.${reset}"
+      fi
    fi
 
    pkg-install-maybe anon-shared-build-log-build-version

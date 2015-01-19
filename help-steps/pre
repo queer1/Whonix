@@ -8,8 +8,9 @@ if [ ! "$whonix_build_no_unset_xtrace" ]; then
    set +x
 fi
 #set -x
-
+set -e
 set -o pipefail
+set -o errtrace
 
 errorhandlershell() {
    true "${cyan}${bold}INFO: Opening interactive shell...${reset}"
@@ -31,8 +32,8 @@ exit code $interactive_chroot_shell_bash_exit_code, cleanup and exit as requeste
 errorhandlerretry() {
    if [ ! "$whonix_build_dispatch_before_retry" = "" ]; then
       true "${cyan}${bold}INFO: dispatch before retry (--retry-before)...: $whonix_build_dispatch_before_retry ${reset}"
-      eval $whonix_build_dispatch_before_retry
-      whonix_build_dispatch_before_retry_exit_code="$?"
+      whonix_build_dispatch_before_retry_exit_code="0"
+      eval $whonix_build_dispatch_before_retry || { whonix_build_dispatch_before_retry_exit_code="$?" ; true; };
       if [ "$whonix_build_dispatch_before_retry_exit_code" = "0" ]; then
          true "${cyan}${bold}INFO: dispatch before retry (--retry-after) exit code was 0, ok. ${reset}"
       else
@@ -43,8 +44,8 @@ errorhandlerretry() {
    fi
 
    true "${cyan}${bold}INFO: Retrying last_failed_bash_command...: $last_failed_bash_command ${reset}"
-   eval $last_failed_bash_command
-   retry_last_failed_bash_command_exit_code="$?"
+   retry_last_failed_bash_command_exit_code="0"
+   eval $last_failed_bash_command || { retry_last_failed_bash_command_exit_code="$?" ; true; };
    if [ "$retry_last_failed_bash_command_exit_code" = "0" ]; then
       true "${cyan}${bold}INFO: Retry succeeded. exit code of last_failed_bash_command: $retry_last_failed_bash_command_exit_code ${reset}"
       unset whonix_build_auto_retry_counter
@@ -56,8 +57,8 @@ errorhandlerretry() {
 
    if [ ! "$whonix_build_dispatch_after_retry" = "" ]; then
       true "${cyan}${bold}INFO: dispatch after retry (--retry-after)...: $whonix_build_dispatch_after_retry ${reset}"
-      eval $whonix_build_dispatch_after_retry
-      whonix_build_dispatch_after_retry_exit_code="$?"
+      whonix_build_dispatch_after_retry_exit_code="0"
+      eval $whonix_build_dispatch_after_retry || { whonix_build_dispatch_after_retry_exit_code="$?" ; true; };
       if [ "$whonix_build_dispatch_after_retry_exit_code" = "0" ]; then
          true "${cyan}${bold}INFO: dispatch after retry (--retry-after) exit code was 0, ok. ${reset}"
       else
@@ -236,6 +237,7 @@ errorhandlersetup() {
 }
 
 errorhandlersetup "errorhandlergeneral" ERR INT TERM
+set +e
 
 export -f errorhandlershell
 export -f errorhandlerretry
@@ -261,25 +263,22 @@ maybe_set_plus_x() {
 ## http://stackoverflow.com/a/12199798
 convertsecs() {
    local h m s
-   ((h="${1}/3600"))
-   ((m="(${1}%3600)/60"))
-   ((s="${1}%60"))
-   printf "%02d:%02d:%02d\n" "$h" "$m" "$s"
-   true
+   ((h="${1}/3600")) || true
+   ((m="(${1}%3600)/60")) || true
+   ((s="${1}%60")) || true
+   printf "%02d:%02d:%02d\n" "$h" "$m" "$s" || true
 }
 
 export -f convertsecs
 
 benchmark_time_start() {
-   export benchmark_time_start="$(date +%s)"
-   true
+   export benchmark_time_start="$(date +%s)" || true
 }
 
 benchmarktimeend() {
-   benchmarktimeend="$(date +%s)"
-   benchmark_took_seconds="$(( $benchmarktimeend - $benchmark_time_start ))"
-   benchmark_took_time="$(convertsecs "$benchmark_took_seconds")"
-   true
+   benchmarktimeend="$(date +%s)" || true
+   benchmark_took_seconds="$(( $benchmarktimeend - $benchmark_time_start ))" || true
+   benchmark_took_time="$(convertsecs "$benchmark_took_seconds")" || true
 }
 
 export -f benchmarktimeend
@@ -287,66 +286,14 @@ export -f benchmarktimeend
 ## start benchmarktimeend
 benchmark_time_start
 
-colors() {
-   errorhandlersetup "errorhandlergeneral" ERR INT TERM
-
-   ## Thanks to:
-   ## http://mywiki.wooledge.org/BashFAQ/037
-   ## Variables for terminal requests.
-   [[ -t 2 ]] && {
-       export alt=$(      tput smcup  || tput ti      ) # Start alt display
-       export ealt=$(     tput rmcup  || tput te      ) # End   alt display
-       export hide=$(     tput civis  || tput vi      ) # Hide cursor
-       export show=$(     tput cnorm  || tput ve      ) # Show cursor
-       export save=$(     tput sc                     ) # Save cursor
-       export load=$(     tput rc                     ) # Load cursor
-       export bold=$(     tput bold   || tput md      ) # Start bold
-       export stout=$(    tput smso   || tput so      ) # Start stand-out
-       export estout=$(   tput rmso   || tput se      ) # End stand-out
-       export under=$(    tput smul   || tput us      ) # Start underline
-       export eunder=$(   tput rmul   || tput ue      ) # End   underline
-       export reset=$(    tput sgr0   || tput me      ) # Reset cursor
-       export blink=$(    tput blink  || tput mb      ) # Start blinking
-       export italic=$(   tput sitm   || tput ZH      ) # Start italic
-       export eitalic=$(  tput ritm   || tput ZR      ) # End   italic
-   [[ $TERM != *-m ]] && {
-       export red=$(      tput setaf 1|| tput AF 1    )
-       export green=$(    tput setaf 2|| tput AF 2    )
-       export yellow=$(   tput setaf 3|| tput AF 3    )
-       export blue=$(     tput setaf 4|| tput AF 4    )
-       export magenta=$(  tput setaf 5|| tput AF 5    )
-       export cyan=$(     tput setaf 6|| tput AF 6    )
-   }
-       export white=$(    tput setaf 7|| tput AF 7    )
-       export default=$(  tput op                     )
-       export eed=$(      tput ed     || tput cd      )   # Erase to end of display
-       export eel=$(      tput el     || tput ce      )   # Erase to end of line
-       export ebl=$(      tput el1    || tput cb      )   # Erase to beginning of line
-       export ewl=$eel$ebl                                # Erase whole line
-       export draw=$(     tput -S <<< '   enacs
-                                   smacs
-                                   acsc
-                                   rmacs' || { \
-                   tput eA; tput as;
-                   tput ac; tput ae;         } )   # Drawing characters
-       export back=$'\b'
-   } 2>/dev/null ||:
-
-   export whonix_build_already_defined_colors="true"
-}
-
-if [ ! "$whonix_build_already_defined_colors" = "true" ]; then
-   colors
-fi
-
-if [ ! "$ROOT_CHECK" = "0" ]; then
+root_check() {
    if [ "$(id -u)" != "0" ]; then
        echo "${red}${bold}ERROR: This must be run as root (sudo)!${reset}"
        exit 1
    else
        true "INFO: Script running as root."
    fi
-fi
+}
 
 lower_priorities() {
    errorhandlersetup "errorhandlergeneral" ERR INT TERM

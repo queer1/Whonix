@@ -5,6 +5,7 @@
 ## See the file COPYING for copying conditions.
 
 set -x
+set -e
 true "INFO: Currently running script: $BASH_SOURCE${1+"$@"}"
 set -o pipefail
 
@@ -22,6 +23,9 @@ cd "$MYDIR"
 cd ..
 
 source ./help-steps/pre
+source ./help-steps/colors
+
+root_check
 
 export WHONIX_BUILD_ONE_SCRIPT_STARTED="1"
 

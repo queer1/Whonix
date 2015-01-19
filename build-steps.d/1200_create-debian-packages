@@ -5,6 +5,7 @@
 ## See the file COPYING for copying conditions.
 
 set -x
+set -e
 
 true "INFO: Currently running script: $BASH_SOURCE${1+"$@"}"
 
@@ -18,7 +19,10 @@ whonix_build_one_parsed="1"
 VMNAME="internalrun"
 
 source pre
+source colors
 source variables
+
+root_check
 
 cd "$MYDIR"
 cd ..
@@ -137,17 +141,21 @@ check_for_uncommited_changes() {
          git clean -d --force --force --dry-run
          true
       else
+         true "${bold}${red}---------------------------------------------------------------------${reset}"
          true "${bold}${red}$BASH_SOURCE ERROR: Git reports uncommitted changes! ${reset}"
-         true "${cyan}$BASH_SOURCE INFO: (And you are not using --ignore-uncommitted, which you also should not do for security reasons, unless you know git and what you are doing.) ${reset}"
+         true "${cyan}$BASH_SOURCE INFO: (And you are not using ${under}--ignore-uncommitted${eunder}, \
+which you also should not do for security reasons, unless you know what you are doing. Such as in case you added custom code.) ${reset}"
          true "${cyan}$BASH_SOURCE INFO: Running \"git status\" for your convenience. ${reset}"
          git status
          true "${cyan}$BASH_SOURCE INFO: Running git \"clean -d --force --force --dry-run\" for your convenience. ${reset}"
          git clean -d --force --force --dry-run
          true "${cyan}$BASH_SOURCE You most likely like to run:${reset}
-    $WHONIX_SOURCE_HELP_STEPS_FOLDER/cleanup-files
+    ${under}$WHONIX_SOURCE_HELP_STEPS_FOLDER/cleanup-files${eunder}
 ${cyan}or if you know what you are doing:${reset}
-    git clean -d --force --force
-    git reset --hard"
+    ${under}git clean -d --force --force${eunder}
+    ${under}git reset --hard${eunder}
+"
+         true "${bold}${red}---------------------------------------------------------------------${reset}"
 
          error "Uncommitted changes! See above!"
          true
@@ -223,14 +231,6 @@ create_whonix_debian_packages_without_building_system() {
 
    true "${cyan}$BASH_SOURCE INFO: Creating Whonix Debian Packages... ${reset}"
 
-   ## --rootcmd as per https://wiki.debian.org/ReproducibleBuilds#How_to_build_a_deb_using_faketime
-   ##
-   ## -p (**-p**sign-command) is understood by dpkg-buildpackage.
-   ## See also man dpkg-buildpackage.
-   ##
-   ## -sa is understood by dpkg-buildpackage, it forces the inclusion of the original source
-   ## See also http://www.debian.org/doc/manuals/maint-guide/upload.en.html.
-
    shopt -s nullglob
    shopt -s dotglob
 
@@ -254,15 +254,24 @@ create_whonix_debian_packages_without_building_system() {
             continue
          fi
       fi
+      ## The make_use_lintian is supported by the generic Makefile.
+      export make_use_lintian="true"
+      local make_file
+      if [ -f "setup.py" ]; then
+         make_file="makefile_generic"
+      else
+         make_file="Makefile"
+      fi
+      test -f "$make_file"
       if [ "$CI" = "true" ]; then
          ## Hiding,
          ## "ERROR: ld.so: object '/usr/$LIB/faketime/libfaketime.so.1' from LD_PRELOAD cannot be preloaded: ignored."
          ## on CI systems because otherwise, "Maximum output exceeded".
          sudo -E -u "$user_name" \
-            make deb-pkg >/dev/null 2>&1
+            make -f "$make_file" deb-pkg >/dev/null 2>&1
       else
          sudo -E -u "$user_name" \
-            make deb-pkg
+            make -f "$make_file" deb-pkg
       fi
    done
 
@@ -291,29 +300,6 @@ create_whonix_repository() {
    shopt -s nullglob
    local file_name
 
-   #true "${cyan}$BASH_SOURCE INFO: Importing .dsc file... ${reset}"
-   #for file_name in "$WHONIX_SOURCE_FOLDER/packages/"*".dsc"; do
-      #sudo -E -u "$user_name" \
-         #reprepro \
-            #-V \
-            #-V \
-            #$WHONIX_BUILD_REPREPRO_FOLDER_OPTIONS \
-            #includedsc "$WHONIX_BUILD_APT_CODENAME" "$file_name"
-   #done
-   #true "${cyan}$BASH_SOURCE INFO: Done, imported .dsc file. ${reset}"
-
-   #true "${cyan}$BASH_SOURCE INFO: Importing .changes file... ${reset}"
-   #for file_name in "$WHONIX_SOURCE_FOLDER/packages/"*".changes"; do
-      #sudo -E -u "$user_name" \
-         #reprepro \
-            #-V \
-            #-V \
-            #$WHONIX_BUILD_REPREPRO_FOLDER_OPTIONS \
-            #--ignore=wrongdistribution \
-            #include "$WHONIX_BUILD_APT_CODENAME" "$file_name"
-   #done
-   #true "${cyan}$BASH_SOURCE INFO: Done, imported .changes file. ${reset}"
-
    true "${cyan}$BASH_SOURCE INFO: Importing .deb files... ${reset}"
    for file_name in "$WHONIX_SOURCE_FOLDER/packages/"*".deb"; do
       sudo -E -u "$user_name" \
@@ -335,14 +321,6 @@ create_whonix_repository() {
             includedeb "$WHONIX_BUILD_APT_CODENAME" "$file_name"
    done
    true "${cyan}$BASH_SOURCE INFO: Imported temp_extra_packages .deb files. ${reset}"
-
-   ## Debugging.
-   #true "${cyan}$BASH_SOURCE INFO: Displaying sha512sum of $WHONIX_APT_REPOSITORY_FOLDER/pool/**... ${reset}"
-   #shopt -s globstar dotglob
-   ## "|| true", because "sha512sum" exits 1, because "sha512sum: [...]: Is a directory".
-   #sha512sum "$WHONIX_APT_REPOSITORY_FOLDER/pool/"** || true
-   #shopt -u globstar dotglob
-   #true "${cyan}$BASH_SOURCE INFO: Done, displayed sha512sums. ${reset}"
 
    true "${cyan}$BASH_SOURCE INFO: Done, created ${under}${WHONIX_BUILD_APT_CODENAME}${eunder} APT repository. ${reset}"
 }

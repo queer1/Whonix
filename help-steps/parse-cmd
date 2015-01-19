@@ -12,7 +12,7 @@ parse_cmd_target_error() {
 
 parse_cmd_flavor_error() {
    trap "build_main_error_handler" ERR
-   echo "${red}${bold}You must add --flavor whonix-gateway, --flavor whonix-workstation, --flavor whonix-custom-workstation or --flavor all.${reset}"
+   echo "${red}${bold}You must add --flavor whonix-gateway, --flavor whonix-workstation, --flavor whonix-custom-workstation, --flavor gnw or --flavor all.${reset}"
    exit 1
 }
 
@@ -62,6 +62,15 @@ build_main_parse_cmd() {
                elif [ "$2" = "whonix-custom-workstation" ]; then
                   got_flavor="true"
                   WHONIX_MAIN_SCRIPT_BUILD_CUSTOM_WORKSTATION="true"
+               elif [ "$2" = "all" ]; then
+                  got_flavor="true"
+                  WHONIX_MAIN_SCRIPT_BUILD_GATEWAY="true"
+                  WHONIX_MAIN_SCRIPT_BUILD_WORKSTATION="true"
+                  WHONIX_MAIN_SCRIPT_BUILD_CUSTOM_WORKSTATION="true"
+               elif [ "$2" = "gnw" ]; then
+                  got_flavor="true"
+                  WHONIX_MAIN_SCRIPT_BUILD_GATEWAY="true"
+                  WHONIX_MAIN_SCRIPT_BUILD_WORKSTATION="true"
                elif [ "$2" = "none" ]; then
                   echo "TODO: implement"
                   exit 1
@@ -75,6 +84,7 @@ build_main_parse_cmd() {
                break
                ;;
            -*)
+               echo "${red}${bold}unknown option: $1${reset}"
                error "${red}${bold}unknown option: $1${reset}"
                ;;
            *)
@@ -234,6 +244,14 @@ whonix_build_one_script_help() {
 ##
 ## --grmlbin /path/to/grml-debootstrap
 ## Defaults to grml-debootstrap.
+##
+## --tb none|closed|open
+## none: Do not install Tor Browser.
+## closed: Fail closed if Tor Browser cannot be installed.
+## open: Fail closed if Tor Browser cannot and installed.
+## Defaults to none.
+## Requires the tb-updater package being installed. Be careful if you modify
+## the default package selection as well.
 "
 }
 
@@ -589,17 +607,29 @@ whonix_build_one_parse_cmd() {
                fi
                shift 2
                ;;
+           --tb)
+               if [ "$2" = "" ]; then
+                  echo "${red}${bold}ERROR: --tb may not be empty.${reset}"
+                  exit 1
+               else
+                  export anon_shared_inst_tb="$2"
+                  true "${cyan}INFO: --tb set to: $anon_shared_inst_tb${reset}"
+               fi
+               shift 2
+               ;;
            --)
                shift
                break
                ;;
            -*)
+               echo "${red}${bold}unknown option (1): $1${reset}"
                error "${red}${bold}unknown option (1): $1${reset}"
                ;;
            *)
                if [ "$1" = "" ]; then
                   true
                else
+                  echo "${red}${bold}unknown option (2): $1${reset}"
                   error "${red}${bold}unknown option (2): $1${reset}"
                fi
                break
